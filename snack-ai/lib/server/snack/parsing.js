@@ -55,7 +55,7 @@ function extractBestEffortRecipe(text) {
     while ((m = strRe.exec(stepsBlock)) !== null) out.steps.push(m[1]);
   }
 
-  const ingBlock = raw.match(/"ingredients"\s*:\s*\[([\s\S]{0,10000})/i)?.[1] || "";
+  const ingBlock = raw.match(/"ingredients"\s*:\s*\[([\s\S]*?)\]/i)?.[1] || "";
   const objRe = /\{([\s\S]*?)\}/g;
   let o;
   while ((o = objRe.exec(ingBlock)) !== null) {
@@ -128,7 +128,7 @@ export function enforceRecipeSchema(obj) {
             notes: String(it?.notes ?? "").trim(),
             ninja_query: String(it?.ninja_query ?? "").trim(),
           }))
-          .filter((it) => it.name)
+          .filter((it) => it.name && (it.quantity || it.unit || it.notes || it.ninja_query))
       : [],
     ingredient_macros: Array.isArray(obj.ingredient_macros)
       ? obj.ingredient_macros

@@ -15,8 +15,8 @@ function buildIngredientsTable(ingredients) {
 
 export async function POST(req) {
   try {
-    const { goal, time, cooking, hunger } = await req.json();
-    const prompt = buildSnackPrompt({ goal, time, cooking, hunger });
+    const { goal, time, cooking, diet, hunger } = await req.json();
+    const prompt = buildSnackPrompt({ goal, time, cooking, diet, hunger });
 
     const llm = await requestGroqWithFallback(prompt);
     if (!llm.ok) {

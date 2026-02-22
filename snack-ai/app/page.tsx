@@ -9,6 +9,7 @@ export default function Home() {
   const [goal, setGoal] = useState("high protein");
   const [time, setTime] = useState("5");
   const [cooking, setCooking] = useState("pan");
+  const [diet, setDiet] = useState("veg");
   const [hunger, setHunger] = useState("medium");
   const [recipe, setRecipe] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
@@ -51,12 +52,12 @@ export default function Home() {
     const res = await fetch("/api/snack", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ goal, time, cooking, hunger }),
+      body: JSON.stringify({ goal, time, cooking, diet, hunger }),
     });
 
     const data = await res.json();
     setRecipe(data);
-    saveRecipeToCache({ ...data, _params: { goal, time, cooking, hunger }, _ts: Date.now() });
+    saveRecipeToCache({ ...data, _params: { goal, time, cooking, diet, hunger }, _ts: Date.now() });
     setLoading(false);
   };
 
@@ -72,7 +73,7 @@ export default function Home() {
     const str = String(s).trim();
     if (!str) return null;
     const lower = str.toLowerCase();
-    const fieldLabels = ['ingredients','name','quantity','unit','notes','price','ingredients_table'];
+    const fieldLabels = ['ingredients','name','quantity','unit','notes','price','ingredients_table','ninja_query'];
     if (fieldLabels.includes(lower)) return null;
     if (/^₹/.test(str)) return null;
     return str;
@@ -81,7 +82,7 @@ export default function Home() {
   const getSanitizedSteps = (steps: any, ingredients: any[]) => {
     if (!Array.isArray(steps)) return []
     const names = new Set((ingredients || []).map((it: any) => String(it?.name || '').toLowerCase()).filter(Boolean))
-    const units = new Set(['tsp','tbsp','cup','cups','slice','g','kg','ml','l','pinch','to taste','tablespoon','teaspoon','tspoon','tblsp','gram','grams','kilogram','milliliter','liter','oz','ounce','pound','pcs','pieces'])
+    const units = new Set(['tsp','tbsp','cup','cups','slice','g','kg','ml','l','pinch','to taste','tablespoon','teaspoon','tspoon','tblsp','gram','grams','kilogram','milliliter','liter','oz','ounce','pound','pcs','piece','pieces','small','medium','large'])
 
     return steps
       .map(sanitizeStep)
@@ -108,8 +109,12 @@ export default function Home() {
         if (/^\d+(\.\d+)?(\s+)(g|kg|ml|l|tsp|tbsp|cup|slice|pinch|to taste|oz|gram|grams|milliliter|liter)$/i.test(low)) return false // "60 g", "1 tsp"
         
         // Reject metadata labels
-        const metaLabels = ['ingredients','name','quantity','unit','notes','price','ingredients_table','qty']
+        const metaLabels = ['ingredients','name','quantity','unit','notes','price','ingredients_table','qty','ninja_query']
         if (metaLabels.includes(low)) return false
+
+        // Reject short quantity fragments from malformed payload lines like "1 small"
+        if (/^\d+(\.\d+)?(\s*)\/(\s*)?\d+\s+[a-z]+$/i.test(low)) return false
+        if (/^\d+(\.\d+)?\s+[a-z]+$/i.test(low)) return false
         
         // Reject if 100% whitespace/punctuation
         if (!/[a-z]/i.test(txt)) return false
@@ -216,6 +221,7 @@ export default function Home() {
             set={setCooking}
             options={["no cook", "pan", "microwave", "oven", "air fryer", "boil", "steam", "grill", "bake"]}
           />
+          <Select label="Diet" value={diet} set={setDiet} options={["veg", "non-veg"]} />
           <Select label="Hunger" value={hunger} set={setHunger} options={["light","medium","heavy"]} />
 
           <motion.button
