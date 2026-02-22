@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=VT323&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Terminal CLI Design Tokens */
+:root {
+  --bg: #0a0a0a;
+  --fg: #33ff00; /* primary neon green */
+  --accent: #33ff00;
+  --secondary: #ffb000; /* amber */
+  --muted: #1f521f;
+  --error: #ff3333;
+  --border: #1f521f;
+  --scanline-opacity: 0.04;
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'JetBrains Mono', monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.4;
+}
+
+/* Global headings: uppercase, monospace */
+h1,h2,h3,h4,h5 { font-family: 'JetBrains Mono', monospace; text-transform: uppercase; color: var(--fg); }
+
+/* Text glow to mimic phosphor */
+.text-phosphor { text-shadow: 0 0 6px rgba(51,255,0,0.45); }
+
+/* softer corners for readability */
+* { box-sizing: border-box; }
+
+/* Terminal window / card (clean & simple) */
+.terminal-card {
+  background: #070707;
+  border: 1px solid rgba(51,255,0,0.08);
+  padding: 1rem;
+  color: var(--fg);
+  font-family: 'JetBrains Mono', monospace;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+}
+
+/* Button: bracket style */
+.btn-terminal {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  border: none;
+  background: var(--accent);
+  color: #051010;
+  font-weight: 700;
+  border-radius: 6px;
+}
+.btn-terminal:hover { opacity: 0.95; }
+.btn-terminal:active { transform: translateY(1px); }
+
+/* Input prompt style */
+.prompt { display: flex; gap: 0.6rem; align-items: center; font-family: 'JetBrains Mono', monospace; }
+.prompt .prompt-prefix { color: var(--muted); min-width: 20px; text-align: right; }
+.prompt input { background: transparent; border: none; color: var(--fg); outline: none; font-family: inherit; }
+
+/* Cursor blink */
+.cursor { display: inline-block; width: 10px; height: 18px; background: var(--fg); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 0%,50%{ opacity: 1 } 51%,100%{ opacity: 0 } }
+
+/* ASCII logo */
+.ascii-logo { font-family: 'VT323', monospace; color: var(--fg); white-space: pre; font-size: 1.25rem; letter-spacing: 0.02em; }
+
+/* Scanline overlay */
+.scanlines::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 100% 4px;
+  mix-blend-mode: overlay;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
+
+/* Table styles inside terminal cards */
+.terminal-card table { border-collapse: collapse; width: 100%; font-family: 'JetBrains Mono', monospace; }
+.terminal-card th, .terminal-card td { padding: 0.6rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.04); text-align: left; vertical-align: middle; }
+.terminal-card thead th { color: rgba(255,255,255,0.9); font-weight: 700; text-transform: none; }
+.terminal-card tbody tr:nth-child(odd) { background: rgba(255,255,255,0.01); }
+.terminal-card tbody tr:last-child td { border-bottom: none; }
+
+/* Select / prompt improvements */
+.prompt select { background: transparent; color: var(--fg); border: none; padding: 0.25rem; outline: none; font-family: inherit; }
+.prompt { border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 0.25rem; }
+.prompt .prompt-prefix { text-transform: none; }
+
+
+
