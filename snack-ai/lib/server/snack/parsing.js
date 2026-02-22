@@ -106,10 +106,37 @@ export function parseRecipeResponse(text) {
 export function enforceRecipeSchema(obj) {
   if (!obj || typeof obj !== "object") return null;
 
+  const normalizedIngredients = Array.isArray(obj.ingredients)
+    ? obj.ingredients
+        .map((it) => ({
+          name: String(it?.name ?? "").trim(),
+          quantity: String(it?.quantity ?? "").trim(),
+          unit: String(it?.unit ?? "").trim(),
+          notes: String(it?.notes ?? "").trim(),
+          ninja_query: String(it?.ninja_query ?? "").trim(),
+        }))
+        .filter((it) => it.name && (it.quantity || it.unit || it.notes || it.ninja_query))
+    : [];
+
+  const ingredientNames = new Set(normalizedIngredients.map((it) => it.name.toLowerCase()).filter(Boolean));
+
   const cleanSteps = Array.isArray(obj.steps)
     ? obj.steps
-        .filter((s) => typeof s === "string" && !META_LABELS.includes(s.trim().toLowerCase()) && !/^[\d.\s-]+$/.test(s.trim()))
+        .filter((s) => typeof s === "string")
         .map((s) => s.trim())
+        .filter((s) => {
+          const low = s.toLowerCase();
+          if (!s) return false;
+          if (META_LABELS.includes(low)) return false;
+          if (low === "ninja_query") return false;
+          if (ingredientNames.has(low)) return false;
+          if (/^[\d.\s-]+$/.test(s)) return false;
+          if (/^\d+(\.\d+)?(\s*)\/(\s*)?\d+\s+[a-z]+$/i.test(s)) return false;
+          if (/^\d+(\.\d+)?\s+(g|kg|ml|l|tsp|tbsp|cup|cups|piece|pieces|small|medium|large)$/i.test(s)) return false;
+          if (/^(to taste|g|kg|ml|l|tsp|tbsp|cup|cups|piece|pieces)$/i.test(low)) return false;
+          if (s.length < 8) return false;
+          return true;
+        })
     : [];
 
   return {
@@ -119,17 +146,7 @@ export function enforceRecipeSchema(obj) {
     carbs: obj.carbs == null ? null : String(obj.carbs),
     fat: obj.fat == null ? null : String(obj.fat),
     steps: cleanSteps,
-    ingredients: Array.isArray(obj.ingredients)
-      ? obj.ingredients
-          .map((it) => ({
-            name: String(it?.name ?? "").trim(),
-            quantity: String(it?.quantity ?? "").trim(),
-            unit: String(it?.unit ?? "").trim(),
-            notes: String(it?.notes ?? "").trim(),
-            ninja_query: String(it?.ninja_query ?? "").trim(),
-          }))
-          .filter((it) => it.name && (it.quantity || it.unit || it.notes || it.ninja_query))
-      : [],
+    ingredients: normalizedIngredients,
     ingredient_macros: Array.isArray(obj.ingredient_macros)
       ? obj.ingredient_macros
           .map((it) => ({

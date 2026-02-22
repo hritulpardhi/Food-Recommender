@@ -37,6 +37,7 @@ Example: "100 g paneer"
 Do NOT include extra words like "of".
 
 steps key in JSON (array of strings) should have clear, concise cooking instructions.
+Do not put ingredient payload fragments in steps (e.g. "chicken breast", "250 g", "ninja_query").
 Return JSON in this exact structure:
 
 {
