@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as motionCore, AnimatePresence } from "framer-motion";
 import CookingLoader from "./components/ui/CookingLoader";
+
+const motion: any = motionCore;
 
 export default function Home() {
   const [goal, setGoal] = useState("high protein");
@@ -357,7 +359,17 @@ export default function Home() {
   );
 }
 
-function Select({label,value,set,options}) {
+function Select({
+  label,
+  value,
+  set,
+  options,
+}: {
+  label: string;
+  value: string;
+  set: (v: string) => void;
+  options: string[];
+}) {
   const toTitle = (s:string) => s.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
   return (
     <div>
