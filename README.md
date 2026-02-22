@@ -2,6 +2,8 @@
 
 AI-powered snack recommendation app built with Next.js.  
 The main application lives in `snack-ai/`.
+<img width="2557" height="1300" alt="image" src="https://github.com/user-attachments/assets/0c07e260-4bba-42e6-a8e6-69527447688e" />
+
 
 ## Features
 
