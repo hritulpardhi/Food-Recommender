@@ -116,6 +116,39 @@ export default function Home() {
       })
   }
 
+  const findApiNutritionForIngredient = (ingredientName: string) => {
+    if (!Array.isArray(recipe?.nutrition_items)) return null
+    const needle = String(ingredientName || '').toLowerCase().trim()
+    if (!needle) return null
+
+    return recipe.nutrition_items.find((n: any) => {
+      const hay = String(n?.name || '').toLowerCase().trim()
+      return hay.includes(needle) || needle.includes(hay)
+    }) ?? null
+  }
+
+  const findLlmMacrosForIngredient = (ingredientName: string) => {
+    const source = Array.isArray(recipe?._llmIngredientMacros)
+      ? recipe._llmIngredientMacros
+      : Array.isArray(recipe?.ingredient_macros)
+      ? recipe.ingredient_macros
+      : []
+
+    const needle = String(ingredientName || '').toLowerCase().trim()
+    if (!needle) return null
+
+    return source.find((m: any) => {
+      const hay = String(m?.name || '').toLowerCase().trim()
+      return hay.includes(needle) || needle.includes(hay)
+    }) ?? null
+  }
+
+  const showWithBracket = (apiValue: any, llmValue: any) => {
+    const left = apiValue ?? llmValue ?? "—"
+    const right = llmValue ?? "—"
+    return `${left} (${right})`
+  }
+
 
   const ctaVariants = {
     idle: {
@@ -233,102 +266,35 @@ export default function Home() {
                           <th className="text-right">Qty</th>
                           <th>Unit</th>
                           <th>Notes</th>
+                          <th>Calories (API/LLM)</th>
+                          <th>Protein (API/LLM)</th>
+                          <th>Carbs (API/LLM)</th>
+                          <th>Fat (API/LLM)</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {recipe.ingredients.map((it: any, idx: number) => (
-                          <tr key={idx} className="border-t" style={{ borderColor: 'var(--border)' }}>
-                            <td className="py-2 pr-4">{it.name}</td>
-                            <td className="py-2 text-right pr-4">{it.quantity}</td>
-                            <td className="py-2 pr-4">{it.unit}</td>
-                            <td className="py-2 text-[var(--muted)]">{it.notes}</td>
-                          </tr>
-                        ))}
+                        {recipe.ingredients.map((it: any, idx: number) => {
+                          const apiNutrition = findApiNutritionForIngredient(it?.name)
+                          const llmNutrition = findLlmMacrosForIngredient(it?.name)
+                          return (
+                            <tr key={idx} className="border-t" style={{ borderColor: 'var(--border)' }}>
+                              <td className="py-2 pr-4">{it.name}</td>
+                              <td className="py-2 text-right pr-4">{it.quantity}</td>
+                              <td className="py-2 pr-4">{it.unit}</td>
+                              <td className="py-2 text-[var(--muted)]">{it.notes}</td>
+                              <td className="py-2 pr-4">{showWithBracket(apiNutrition?.calories, llmNutrition?.calories)}</td>
+                              <td className="py-2 pr-4">{showWithBracket(apiNutrition?.protein_g, llmNutrition?.protein)}</td>
+                              <td className="py-2 pr-4">{showWithBracket(apiNutrition?.carbohydrates_total_g, llmNutrition?.carbs)}</td>
+                              <td className="py-2 pr-4">{showWithBracket(apiNutrition?.fat_total_g, llmNutrition?.fat)}</td>
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>
                 ) : recipe.ingredients_table ? (
                   <pre className="mb-4 whitespace-pre-wrap text-sm p-3">{recipe.ingredients_table}</pre>
                 ) : null}
-
-                {Array.isArray(recipe.nutrition_items) && recipe.nutrition_items.length > 0 && (
-                  <div className="mb-4 overflow-auto text-sm">
-                    <div className="text-sm font-semibold mb-2 text-[var(--muted)]">Nutrition API Breakdown</div>
-                    {(() => {
-                      const sum = (key: string) =>
-                        recipe.nutrition_items.reduce((acc: number, it: any) => {
-                          const n = Number(it?.[key]);
-                          return Number.isFinite(n) ? acc + n : acc;
-                        }, 0);
-                      const fmt = (n: number) => (n > 0 ? (Math.round(n * 10) / 10).toString() : "—");
-                      const totals = {
-                        calories: sum("calories"),
-                        serving_size_g: sum("serving_size_g"),
-                        protein_g: sum("protein_g"),
-                        carbohydrates_total_g: sum("carbohydrates_total_g"),
-                        fat_total_g: sum("fat_total_g"),
-                        fat_saturated_g: sum("fat_saturated_g"),
-                        sodium_mg: sum("sodium_mg"),
-                        potassium_mg: sum("potassium_mg"),
-                        cholesterol_mg: sum("cholesterol_mg"),
-                        fiber_g: sum("fiber_g"),
-                        sugar_g: sum("sugar_g"),
-                      };
-                      return (
-                    <table className="w-full font-mono text-xs">
-                      <thead>
-                        <tr className="text-left text-[var(--muted)]">
-                          <th>Name</th>
-                          <th>Calories</th>
-                          <th>Serving (g)</th>
-                          <th>Protein (g)</th>
-                          <th>Carbs (g)</th>
-                          <th>Fat (g)</th>
-                          <th>Fat Sat (g)</th>
-                          <th>Sodium (mg)</th>
-                          <th>Potassium (mg)</th>
-                          <th>Cholesterol (mg)</th>
-                          <th>Fiber (g)</th>
-                          <th>Sugar (g)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {recipe.nutrition_items.map((it: any, idx: number) => (
-                          <tr key={`${it?.name ?? "item"}-${idx}`} className="border-t" style={{ borderColor: 'var(--border)' }}>
-                            <td className="py-2 pr-4">{it?.name ?? "—"}</td>
-                            <td className="py-2 pr-4">{it?.calories ?? "—"}</td>
-                            <td className="py-2 pr-4">{it?.serving_size_g ?? "—"}</td>
-                            <td className="py-2 pr-4">{it?.protein_g ?? "—"}</td>
-                            <td className="py-2 pr-4">{it?.carbohydrates_total_g ?? "—"}</td>
-                            <td className="py-2 pr-4">{it?.fat_total_g ?? "—"}</td>
-                            <td className="py-2 pr-4">{it?.fat_saturated_g ?? "—"}</td>
-                            <td className="py-2 pr-4">{it?.sodium_mg ?? "—"}</td>
-                            <td className="py-2 pr-4">{it?.potassium_mg ?? "—"}</td>
-                            <td className="py-2 pr-4">{it?.cholesterol_mg ?? "—"}</td>
-                            <td className="py-2 pr-4">{it?.fiber_g ?? "—"}</td>
-                            <td className="py-2 pr-4">{it?.sugar_g ?? "—"}</td>
-                          </tr>
-                        ))}
-                        <tr className="border-t text-left" style={{ borderColor: 'var(--border)', color: '#ffffff' }}>
-                          <th className="py-2 pr-4 font-semibold" style={{ color: '#ffffff' }}>Total</th>
-                          <th className="py-2 pr-4 font-semibold" style={{ color: '#ffffff' }}>{fmt(totals.calories)}</th>
-                          <th className="py-2 pr-4 font-semibold" style={{ color: '#ffffff' }}>{fmt(totals.serving_size_g)}</th>
-                          <th className="py-2 pr-4 font-semibold" style={{ color: '#ffffff' }}>{fmt(totals.protein_g)}</th>
-                          <th className="py-2 pr-4 font-semibold" style={{ color: '#ffffff' }}>{fmt(totals.carbohydrates_total_g)}</th>
-                          <th className="py-2 pr-4 font-semibold" style={{ color: '#ffffff' }}>{fmt(totals.fat_total_g)}</th>
-                          <th className="py-2 pr-4 font-semibold" style={{ color: '#ffffff' }}>{fmt(totals.fat_saturated_g)}</th>
-                          <th className="py-2 pr-4 font-semibold" style={{ color: '#ffffff' }}>{fmt(totals.sodium_mg)}</th>
-                          <th className="py-2 pr-4 font-semibold" style={{ color: '#ffffff' }}>{fmt(totals.potassium_mg)}</th>
-                          <th className="py-2 pr-4 font-semibold" style={{ color: '#ffffff' }}>{fmt(totals.cholesterol_mg)}</th>
-                          <th className="py-2 pr-4 font-semibold" style={{ color: '#ffffff' }}>{fmt(totals.fiber_g)}</th>
-                          <th className="py-2 pr-4 font-semibold" style={{ color: '#ffffff' }}>{fmt(totals.sugar_g)}</th>
-                        </tr>
-                      </tbody>
-                    </table>
-                      );
-                    })()}
-                  </div>
-                )}
 
                 <ol className="list-decimal pl-5 space-y-2 font-mono text-[var(--fg)]">
                   {Array.isArray(recipe.steps) ? (
